@@ -1,7 +1,7 @@
 require 'sequel'
-require_relative '../../miner'
+require_relative '../../collector'
 
-Miner.database.create_table :messages do
+Collector.new.database.create_table :messages do
                             primary_key :id
                             String      :message
                             String      :value
