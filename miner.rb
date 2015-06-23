@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'net/http'
 require 'uri'
 require 'digest'
@@ -14,12 +15,21 @@ class Miner
   end
 
   def mine
+    time = Time.now
     until @target > @message_hex
-      @message = @message_hex.to_s
-      @message_hex = digest(@message).hex
+      if (time + 3) > Time.now
+        @message = @message_hex.to_s
+        @message_hex = digest(@message).hex
+      else
+        get_target
+      end
     end
     generate_coin
-   end
+  end
+
+  def get_target
+    @target = Net::HTTP.get(URI.parse("http://git-coin.herokuapp.com/target")).hex
+  end
 
   def generate_coin
     response = Net::HTTP.post_form(URI.parse("http://git-coin.herokuapp.com/hash"), {"message" => "#{@message}", "owner" => "joshcass"})

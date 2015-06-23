@@ -14,7 +14,7 @@ class BetterMiner
 
   def mine
     dataset.each do |data|
-    Net::HTTP.post_form(URI.parse("http://git-coin.herokuapp.com/hash"), {"message" => "#{data.fetch :message}", "owner" => "joshcass"})
+      Net::HTTP.post_form(URI.parse("http://git-coin.herokuapp.com/hash"), {"message" => "#{data.fetch :message}", "owner" => "joshcass"})
     end
   end
 end
