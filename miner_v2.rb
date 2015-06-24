@@ -1,13 +1,13 @@
 #!/usr/bin/env ruby
-require 'net/http'
-require 'uri'
+require 'faraday'
 require 'digest'
+require 'json'
 
 class Miner
   REFRESH_THRESHOLD = 1_000_000
 
   def initialize
-    @target = get_target
+    @target = get_target.hex
     @message_hex = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".hex
     @message = nil
     @iteration = 0
@@ -20,11 +20,11 @@ class Miner
   def mine
     until @target > @message_hex
       if @iteration < REFRESH_THRESHOLD
-        @message = @message_hex.to_s
+        @message = @message_hex.to_s + ("a".."z").to_a.sample(5).join
         @message_hex = digest(@message).hex
       else
         @iteration = 0
-        @target = get_target
+        @target = get_target.hex
       end
       @iteration += 1
     end
@@ -32,14 +32,19 @@ class Miner
   end
 
   def get_target
-    Net::HTTP.get(URI.parse("http://git-coin.herokuapp.com/target")).hex
+    Faraday.get("http://git-coin.herokuapp.com/target").body
   end
 
   def generate_coin
-    response = Net::HTTP.post_form(URI.parse("http://git-coin.herokuapp.com/hash"), {"message" => "#{@message}", "owner" => "joshcass"})
-    @target = eval(response.body).fetch(:new_target).hex
-    puts "gitcoin mined!"
+    response = JSON.parse(submit_message)
+    @target = response["new_target"].hex
+    puts "attempted gitcoin mine! result: #{response["success"]}"
+    @message = digest(@message).hex
     mine
+  end
+
+  def submit_message
+    Faraday.post("http://git-coin.herokuapp.com/hash", {"message" => "#{@message}", "owner" => "joshcass"}).body
   end
 end
 

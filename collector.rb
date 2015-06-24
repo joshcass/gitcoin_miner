@@ -24,13 +24,16 @@ class Collector
       @message_hex = digest(@message).hex
     end
     collect_message
-   end
+  end
 
   def collect_message
-    database.from(:messages).insert(:message => "#{@message}", :value => "#{@message_hex}")
+    if @message_hex < "0000000013f4289233345df20a03712bf03814b4".hex
+      database.from(:messages).insert(:message => "#{@message}", :value => "#{@message_hex}")
+      puts "message collected!"
+    end
     @message = Time.now.subsec.to_s
     @message_hex = digest(@message).hex
-    puts "message collected!"
+    puts "hex updated!"
     collect
   end
 end
